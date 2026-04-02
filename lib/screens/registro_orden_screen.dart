@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:badges/badges.dart' as badges;
 import '../database/database_helper.dart';
+import '../services/notification_service.dart';
 import '../models/cliente.dart';
 import '../models/orden_servicio.dart';
 import '../models/servicio_mano_obra.dart';
@@ -359,7 +360,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen> {
             }).toList(),
             onChanged: (categoria) {
               setState(() => _categoriaServicioSeleccionada = categoria);
-              _cargarServiciosPorCategoria(categoria!.id);
+              _cargarServiciosPorCategoria(categoria!.id!);
             },
           ),
         ),
@@ -409,7 +410,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen> {
             }).toList(),
             onChanged: (categoria) {
               setState(() => _categoriaRefaccionSeleccionada = categoria);
-              _cargarRefaccionesPorCategoria(categoria!.id);
+              _cargarRefaccionesPorCategoria(categoria!.id!);
             },
           ),
         ),
