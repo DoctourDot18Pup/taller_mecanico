@@ -32,20 +32,17 @@ class FiltroHeaderDelegate extends SliverPersistentHeaderDelegate {
           final isSelected = filtroActual == filtro['valor'];
           final color = filtro['color'] as Color;
 
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            child: FilterChip(
-              label: Text(filtro['label'] as String),
-              selected: isSelected,
-              onSelected: (_) => onFiltroChanged(filtro['valor'] as String),
-              selectedColor: color.withOpacity(0.2),
-              checkmarkColor: color,
-              labelStyle: TextStyle(
-                color: isSelected ? color : Colors.grey[600],
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              side: BorderSide(color: isSelected ? color : Colors.grey[300]!),
+          return FilterChip(
+            label: Text(filtro['label'] as String),
+            selected: isSelected,
+            onSelected: (_) => onFiltroChanged(filtro['valor'] as String),
+            selectedColor: color.withValues(alpha: 0.2),
+            checkmarkColor: color,
+            labelStyle: TextStyle(
+              color: isSelected ? color : Colors.grey[600],
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
+            side: BorderSide(color: isSelected ? color : Colors.grey[300]!),
           );
         },
       ),

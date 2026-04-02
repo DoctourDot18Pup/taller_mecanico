@@ -15,7 +15,9 @@ class RegistroOrdenScreen extends StatefulWidget {
   _RegistroOrdenScreenState createState() => _RegistroOrdenScreenState();
 }
 
-class _RegistroOrdenScreenState extends State<RegistroOrdenScreen> {
+class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   
   // Datos de la orden
@@ -43,7 +45,19 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this)
+      ..addListener(() {
+        if (!_tabController.indexIsChanging) {
+          setState(() => _tabIndex = _tabController.index);
+        }
+      });
     _cargarCategorias();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _cargarCategorias() async {
@@ -309,7 +323,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen> {
             
             // Tabs para Servicios y Refacciones
             TabBar(
-              onTap: (index) => setState(() => _tabIndex = index),
+              controller: _tabController,
               tabs: [
                 Tab(text: 'Servicios', icon: Icon(Icons.build)),
                 Tab(text: 'Refacciones', icon: Icon(Icons.shopping_cart)),
