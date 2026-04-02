@@ -413,12 +413,100 @@ class DatabaseHelper {
     Database db = await database;
     final hoy = DateTime.now();
     final limite = hoy.add(Duration(days: 2));
-    
+
     final List<Map<String, dynamic>> maps = await db.query(
       'ordenes_servicio',
       where: 'fecha_recordatorio IS NOT NULL AND fecha_recordatorio <= ? AND estado IN (?, ?)',
       whereArgs: [limite.toIso8601String(), 'pendiente', 'en_progreso'],
     );
     return List.generate(maps.length, (i) => OrdenServicio.fromMap(maps[i]));
+  }
+
+  // ==================== CRUD CLIENTES COMPLETO ====================
+  Future<int> updateCliente(Cliente cliente) async {
+    Database db = await database;
+    return await db.update('clientes', cliente.toMap(), where: 'id = ?', whereArgs: [cliente.id]);
+  }
+
+  Future<int> deleteCliente(int id) async {
+    Database db = await database;
+    return await db.delete('clientes', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== CRUD SERVICIOS COMPLETO ====================
+  Future<int> insertServicio(ServicioManoObra servicio) async {
+    Database db = await database;
+    return await db.insert('servicios_mano_obra', servicio.toMap());
+  }
+
+  Future<int> updateServicio(ServicioManoObra servicio) async {
+    Database db = await database;
+    return await db.update('servicios_mano_obra', servicio.toMap(), where: 'id = ?', whereArgs: [servicio.id]);
+  }
+
+  Future<int> deleteServicio(int id) async {
+    Database db = await database;
+    return await db.delete('servicios_mano_obra', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== CRUD REFACCIONES COMPLETO ====================
+  Future<int> insertRefaccion(Refaccion refaccion) async {
+    Database db = await database;
+    return await db.insert('refacciones', refaccion.toMap());
+  }
+
+  Future<int> updateRefaccion(Refaccion refaccion) async {
+    Database db = await database;
+    return await db.update('refacciones', refaccion.toMap(), where: 'id = ?', whereArgs: [refaccion.id]);
+  }
+
+  Future<int> deleteRefaccion(int id) async {
+    Database db = await database;
+    return await db.delete('refacciones', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ==================== CATEGORÍAS INSERT ====================
+  Future<int> insertCategoriaServicio(CategoriaServicio cat) async {
+    Database db = await database;
+    return await db.insert('categorias_servicio', cat.toMap());
+  }
+
+  Future<int> insertCategoriaRefaccion(CategoriaRefaccion cat) async {
+    Database db = await database;
+    return await db.insert('categorias_refaccion', cat.toMap());
+  }
+
+  // ==================== ESTADÍSTICAS DEL MES ====================
+  Future<Map<String, dynamic>> getEstadisticasMes(DateTime mes) async {
+    Database db = await database;
+    final inicio = DateTime(mes.year, mes.month, 1).toIso8601String();
+    final fin = DateTime(mes.year, mes.month + 1, 0, 23, 59, 59).toIso8601String();
+
+    final ordenes = await db.query(
+      'ordenes_servicio',
+      where: 'fecha_entrada >= ? AND fecha_entrada <= ?',
+      whereArgs: [inicio, fin],
+    );
+
+    double totalMes = 0;
+    int pendientes = 0, enProgreso = 0, completadas = 0, canceladas = 0;
+    for (var o in ordenes) {
+      totalMes += (o['total_general'] as num).toDouble();
+      switch (o['estado']) {
+        case 'pendiente': pendientes++; break;
+        case 'en_progreso': enProgreso++; break;
+        case 'completado': completadas++; break;
+        case 'cancelado': canceladas++; break;
+      }
+    }
+
+    return {
+      'total': totalMes,
+      'count': ordenes.length,
+      'pendientes': pendientes,
+      'en_progreso': enProgreso,
+      'completadas': completadas,
+      'canceladas': canceladas,
+    };
   }
 }

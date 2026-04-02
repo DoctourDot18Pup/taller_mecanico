@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../database/database_helper.dart';
 import '../models/orden_servicio.dart';
+import '../utils/formateadores.dart';
+import '../main.dart';
 import 'registro_orden_screen.dart';
 import 'editar_orden_screen.dart';
 import '../models/cliente.dart';
 import '../widgets/filtro_header.dart';
 
 class OrdenesScreen extends StatefulWidget {
+  const OrdenesScreen({super.key});
   @override
-  _OrdenesScreenState createState() => _OrdenesScreenState();
+  State<OrdenesScreen> createState() => _OrdenesScreenState();
 }
 
 class _OrdenesScreenState extends State<OrdenesScreen> {
@@ -121,10 +124,17 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Taller Mecánico - Órdenes'),
-        centerTitle: true,
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
+        title: const Text('Órdenes'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode
+                  : Icons.dark_mode,
+            ),
+            onPressed: () => TallerApp.of(context).toggleTheme(),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -135,7 +145,7 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha: 0.2),
                   spreadRadius: 2,
                   blurRadius: 5,
                 ),
@@ -277,7 +287,7 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                               width: 45,
                               height: 45,
                               decoration: BoxDecoration(
-                                color: orden.getEstadoColor().withOpacity(0.2),
+                                color: orden.getEstadoColor().withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -294,7 +304,7 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                               children: [
                                 Text('Total: \$${orden.totalGeneral.toStringAsFixed(2)}'),
                                 Text(
-                                  'Entrada: ${_formatearFecha(orden.fechaEntrada)}',
+                                  'Entrada: ${Fmt.fecha(orden.fechaEntrada)}',
                                   style: const TextStyle(fontSize: 12),
                                 ),
                               ],
@@ -337,10 +347,6 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
       case 'cancelado': return Icons.cancel;
       default: return Icons.car_repair;
     }
-  }
-
-  String _formatearFecha(DateTime fecha) {
-    return '${fecha.day}/${fecha.month}/${fecha.year}';
   }
 
   void _mostrarModalEventos(DateTime dia) {
