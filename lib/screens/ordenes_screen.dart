@@ -55,9 +55,9 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
   }
 
   Future<bool?> _confirmarCancelacion(OrdenServicio orden) async {
-    if (orden.estado == 'completado') {
+    if (orden.estado == 'completado' || orden.estado == 'cancelado') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No puedes cancelar una orden completada')),
+        SnackBar(content: Text('No puedes cancelar una orden ${orden.estado == 'completado' ? 'completada' : 'ya cancelada'}')),
       );
       return false;
     }
@@ -83,6 +83,11 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
   }
 
   Future<void> _cancelarOrden(OrdenServicio orden) async {
+    // Remove immediately so the dismissed key never reappears mid-frame
+    setState(() {
+      _ordenes.removeWhere((o) => o.id == orden.id);
+    });
+
     final ordenCancelada = OrdenServicio(
       id: orden.id,
       clienteId: orden.clienteId,
