@@ -37,11 +37,6 @@ Aplicación móvil desarrollada en **Flutter** para la administración integral 
 
 ---
 
-## Capturas de pantalla
-
-> *Agregar capturas de pantalla aquí.*
-
----
 
 ## Tecnologías y paquetes
 
