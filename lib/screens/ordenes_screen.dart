@@ -185,28 +185,24 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                   final ordenesDelDia = _eventos[day] ?? [];
                   if (ordenesDelDia.isEmpty) return const SizedBox.shrink();
 
+                  // Un punto por orden, cada uno con el color de su estado
+                  final puntos = ordenesDelDia.take(4).map((o) {
+                    return Container(
+                      width: 6,
+                      height: 6,
+                      margin: const EdgeInsets.symmetric(horizontal: 1),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _getPuntoColor([o]),
+                      ),
+                    );
+                  }).toList();
+
                   return Positioned(
                     bottom: 2,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _getPuntoColor(ordenesDelDia),
-                          ),
-                        ),
-                        if (ordenesDelDia.length > 1)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: Text(
-                              '${ordenesDelDia.length}',
-                              style: const TextStyle(fontSize: 8),
-                            ),
-                          ),
-                      ],
+                      children: puntos,
                     ),
                   );
                 },
