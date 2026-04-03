@@ -148,6 +148,7 @@ class _CatalogoScreenState extends State<CatalogoScreen>
             Container(
               width: 72,
               height: 72,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
@@ -212,6 +213,7 @@ class _CatalogoScreenState extends State<CatalogoScreen>
                           Container(
                             width: 44,
                             height: 44,
+                            alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: color.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
@@ -342,6 +344,7 @@ class _CatalogoScreenState extends State<CatalogoScreen>
                           Container(
                             width: 44,
                             height: 44,
+                            alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: stockColor.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(12),
@@ -473,6 +476,7 @@ class _SmallActionButton extends StatelessWidget {
       child: Container(
         width: 30,
         height: 30,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),

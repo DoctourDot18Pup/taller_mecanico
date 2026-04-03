@@ -226,6 +226,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
           Container(
             width: 52,
             height: 52,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(14),
@@ -298,6 +299,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
               Container(
                 width: 32,
                 height: 32,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
@@ -379,6 +381,7 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
               Container(
                 width: 40,
                 height: 40,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
@@ -450,6 +453,7 @@ class _NavButton extends StatelessWidget {
       child: Container(
         width: 36,
         height: 36,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: enabled
               ? colorScheme.primary.withValues(alpha: 0.1)

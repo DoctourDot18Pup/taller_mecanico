@@ -337,6 +337,7 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
             Container(
               width: 80,
               height: 80,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
@@ -757,6 +758,7 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                                           leading: Container(
                                             width: 40,
                                             height: 40,
+                                            alignment: Alignment.center,
                                             decoration: BoxDecoration(
                                               color: statusColor.withValues(alpha: 0.12),
                                               shape: BoxShape.circle,

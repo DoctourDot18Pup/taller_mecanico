@@ -224,6 +224,7 @@ class _ClientesScreenState extends State<ClientesScreen> {
             Container(
               width: 80,
               height: 80,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
@@ -383,6 +384,7 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         width: 32,
         height: 32,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
