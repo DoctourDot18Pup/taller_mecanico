@@ -385,7 +385,8 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
   }
 
   void _mostrarModalEventos(DateTime dia) {
-    final ordenesDelDia = _eventos[dia] ?? [];
+    final clave = DateTime(dia.year, dia.month, dia.day);
+    final ordenesDelDia = _eventos[clave] ?? [];
 
     showModalBottomSheet(
       context: context,
@@ -396,9 +397,9 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
         maxChildSize: 0.95,
         minChildSize: 0.5,
         builder: (_, controller) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
