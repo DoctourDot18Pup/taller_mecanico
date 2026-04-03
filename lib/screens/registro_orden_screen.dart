@@ -101,13 +101,13 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
       return;
     }
     
+    int cantidad = 1;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Agregar ${refaccion.nombre}'),
         content: StatefulBuilder(
           builder: (context, setStateDialog) {
-            int cantidad = 1;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -153,8 +153,8 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                   'tipo': 'refaccion',
                   'item': refaccion,
                   'precio': refaccion.precio,
-                  'cantidad': 1, // Aquí iría la cantidad seleccionada
-                  'subtotal': refaccion.precio,
+                  'cantidad': cantidad,
+                  'subtotal': refaccion.precio * cantidad,
                 });
               });
               Navigator.pop(context);
