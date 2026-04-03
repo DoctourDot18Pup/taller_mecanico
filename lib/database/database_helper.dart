@@ -378,6 +378,25 @@ class DatabaseHelper {
     );
   }
 
+  /// Returns detail rows enriched with service/refacción names via LEFT JOIN.
+  Future<List<Map<String, dynamic>>> getDetallesConNombres(int ordenId) async {
+    Database db = await database;
+    return await db.rawQuery('''
+      SELECT
+        d.id, d.servicio_id, d.refaccion_id,
+        d.cantidad_refacciones, d.precio_servicio_aplicado,
+        d.subtotal, d.notas_tecnicas,
+        s.nombre  AS servicio_nombre,
+        s.duracion_horas AS servicio_horas,
+        r.nombre  AS refaccion_nombre,
+        r.codigo_parte AS refaccion_codigo
+      FROM detalles_orden d
+      LEFT JOIN servicios_mano_obra s ON d.servicio_id  = s.id
+      LEFT JOIN refacciones         r ON d.refaccion_id = r.id
+      WHERE d.orden_id = ?
+    ''', [ordenId]);
+  }
+
   // ==================== CATEGORÍAS ====================
   Future<List<CategoriaServicio>> getCategoriasServicio() async {
     Database db = await database;

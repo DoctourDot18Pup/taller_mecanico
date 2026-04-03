@@ -8,10 +8,10 @@ import '../models/servicio_mano_obra.dart';
 import '../models/refaccion.dart';
 import '../models/categoria_servicio.dart';
 import '../models/categoria_refaccion.dart';
-import 'detalle_orden_screen.dart';
 import '../utils/formateadores.dart';
 
 class RegistroOrdenScreen extends StatefulWidget {
+  const RegistroOrdenScreen({super.key});
   @override
   _RegistroOrdenScreenState createState() => _RegistroOrdenScreenState();
 }
@@ -20,28 +20,25 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final _formKey = GlobalKey<FormState>();
-  
+
   // Datos de la orden
   Cliente? _clienteSeleccionado;
   DateTime _fechaEntrada = DateTime.now();
-  DateTime _fechaSalida = DateTime.now().add(Duration(days: 2));
+  DateTime _fechaSalida = DateTime.now().add(const Duration(days: 2));
   DateTime? _fechaRecordatorio;
-  String _observaciones = '';
-  
+  final String _observaciones = '';
+
   // Carrito de la orden (servicios y refacciones)
-  List<Map<String, dynamic>> _carrito = [];
-  
+  final List<Map<String, dynamic>> _carrito = [];
+
   // Control de tabs
   int _tabIndex = 0;
-  
+
   // Categorías y items
   List<CategoriaServicio> _categoriasServicio = [];
   List<CategoriaRefaccion> _categoriasRefaccion = [];
   List<ServicioManoObra> _servicios = [];
   List<Refaccion> _refacciones = [];
-  
-  CategoriaServicio? _categoriaServicioSeleccionada;
-  CategoriaRefaccion? _categoriaRefaccionSeleccionada;
 
   @override
   void initState() {
@@ -131,7 +128,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Precio unitario: \$${refaccion.precio}'),
+                Text('Precio unitario: ${Fmt.moneda(refaccion.precio)}'),
                 const SizedBox(height: 10),
                 Text('Stock disponible: ${refaccion.stock}'),
                 const SizedBox(height: 10),
@@ -194,35 +191,31 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     );
   }
 
-  double get _totalManoObra {
-    return _carrito
-        .where((item) => item['tipo'] == 'servicio')
-        .fold(0, (sum, item) => sum + (item['subtotal'] as double));
-  }
+  double get _totalManoObra => _carrito
+      .where((item) => item['tipo'] == 'servicio')
+      .fold(0, (sum, item) => sum + (item['subtotal'] as double));
 
-  double get _totalRefacciones {
-    return _carrito
-        .where((item) => item['tipo'] == 'refaccion')
-        .fold(0, (sum, item) => sum + (item['subtotal'] as double));
-  }
+  double get _totalRefacciones => _carrito
+      .where((item) => item['tipo'] == 'refaccion')
+      .fold(0, (sum, item) => sum + (item['subtotal'] as double));
 
   double get _totalGeneral => _totalManoObra + _totalRefacciones;
 
   Future<void> _guardarOrden() async {
     if (_clienteSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selecciona un cliente'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Selecciona un cliente'), backgroundColor: Colors.red),
       );
       return;
     }
-    
+
     if (_carrito.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Agrega al menos un servicio o refacción'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Agrega al menos un servicio o refacción'), backgroundColor: Colors.red),
       );
       return;
     }
-    
+
     final orden = OrdenServicio(
       clienteId: _clienteSeleccionado!.id!,
       fechaEntrada: _fechaEntrada,
@@ -234,10 +227,9 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
       totalGeneral: _totalGeneral,
       observaciones: _observaciones.isEmpty ? null : _observaciones,
     );
-    
-    int ordenId = await DatabaseHelper().insertOrden(orden);
-    
-    // Guardar detalles
+
+    final ordenId = await DatabaseHelper().insertOrden(orden);
+
     for (var item in _carrito) {
       await DatabaseHelper().insertDetalle({
         'orden_id': ordenId,
@@ -248,10 +240,8 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
         'subtotal': item['subtotal'],
         'notas_tecnicas': null,
       });
-      
     }
-    
-    // Programar notificación
+
     if (_fechaRecordatorio != null) {
       await NotificationService().scheduleNotification(
         ordenId,
@@ -260,7 +250,8 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
         _fechaRecordatorio!,
       );
     }
-    
+
+    if (!mounted) return;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Orden #$ordenId registrada con éxito'), backgroundColor: Colors.green),
@@ -271,14 +262,14 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nueva Orden de Servicio'),
+        title: const Text('Nueva Orden de Servicio'),
         actions: [
           badges.Badge(
             position: badges.BadgePosition.topEnd(top: 0, end: 3),
             badgeContent: Text('${_carrito.length}'),
             child: IconButton(
-              icon: Icon(Icons.shopping_cart),
-              onPressed: () => _mostrarCarrito(),
+              icon: const Icon(Icons.shopping_cart),
+              onPressed: _mostrarCarrito,
             ),
           ),
         ],
@@ -289,23 +280,23 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
           children: [
             // Selección de cliente
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Card(
                 child: ListTile(
                   leading: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                   title: Text(_clienteSeleccionado?.nombre ?? 'Seleccionar cliente'),
-                  subtitle: _clienteSeleccionado != null 
+                  subtitle: _clienteSeleccionado != null
                       ? Text(_clienteSeleccionado!.getInfoVehiculo())
                       : null,
-                  trailing: Icon(Icons.arrow_forward_ios),
-                  onTap: () => _seleccionarCliente(),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: _seleccionarCliente,
                 ),
               ),
             ),
-            
+
             // Fechas
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
@@ -313,7 +304,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                       setState(() => _fechaEntrada = date);
                     }),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: _buildFechaPicker('Fecha salida', _fechaSalida, (date) {
                       setState(() => _fechaSalida = date);
@@ -322,30 +313,30 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                 ],
               ),
             ),
-            
+
             // Recordatorio
             CheckboxListTile(
-              title: Text('Programar recordatorio 2 días antes'),
-              subtitle: Text('Se enviará una notificación de recordatorio'),
+              title: const Text('Programar recordatorio 2 días antes'),
+              subtitle: const Text('Se enviará una notificación de recordatorio'),
               value: _fechaRecordatorio != null,
               onChanged: (value) {
-                if (value == true) {
-                  setState(() => _fechaRecordatorio = _fechaEntrada.subtract(Duration(days: 2)));
-                } else {
-                  setState(() => _fechaRecordatorio = null);
-                }
+                setState(() {
+                  _fechaRecordatorio = value == true
+                      ? _fechaEntrada.subtract(const Duration(days: 2))
+                      : null;
+                });
               },
             ),
-            
-            // Tabs para Servicios y Refacciones
+
+            // Tabs
             TabBar(
               controller: _tabController,
-              tabs: [
+              tabs: const [
                 Tab(text: 'Servicios', icon: Icon(Icons.build)),
                 Tab(text: 'Refacciones', icon: Icon(Icons.shopping_cart)),
               ],
             ),
-            
+
             Expanded(
               child: IndexedStack(
                 index: _tabIndex,
@@ -358,17 +349,19 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
           ],
         ),
       ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.all(16),
-        color: Theme.of(context).colorScheme.surface,
-        child: SafeArea(
-          child: FilledButton(
-            onPressed: _guardarOrden,
-            style: FilledButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      bottomNavigationBar: SizedBox(
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          color: Theme.of(context).colorScheme.surface,
+          child: SafeArea(
+            child: FilledButton(
+              onPressed: _guardarOrden,
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('TERMINAR REGISTRO', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
-            child: Text('TERMINAR REGISTRO', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ),
@@ -378,43 +371,40 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
   Widget _buildServiciosTab() {
     return Column(
       children: [
-        // Categorías de servicios
         Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: DropdownButtonFormField<CategoriaServicio>(
-            decoration: InputDecoration(labelText: 'Categoría de servicio'),
+            decoration: const InputDecoration(labelText: 'Categoría de servicio'),
             items: _categoriasServicio.map((cat) {
               return DropdownMenuItem(value: cat, child: Text(cat.nombre));
             }).toList(),
             onChanged: (categoria) {
-              setState(() => _categoriaServicioSeleccionada = categoria);
               _cargarServiciosPorCategoria(categoria!.id!);
             },
           ),
         ),
-        
-        // Lista de servicios
         Expanded(
           child: _servicios.isEmpty
-              ? Center(child: Text('Selecciona una categoría'))
+              ? const Center(child: Text('Selecciona una categoría'))
               : ListView.builder(
                   itemCount: _servicios.length,
                   itemBuilder: (context, index) {
                     final servicio = _servicios[index];
                     return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
                         leading: Icon(Icons.build, color: Theme.of(context).colorScheme.primary),
                         title: Text(servicio.nombre),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(servicio.descripcion ?? ''),
-                            Text('\$${servicio.precioEstimado} - ${servicio.getDuracionTexto()}'),
+                            if (servicio.descripcion != null && servicio.descripcion!.isNotEmpty)
+                              Text(servicio.descripcion!),
+                            Text('${Fmt.moneda(servicio.precioEstimado)} · ${servicio.getDuracionTexto()}'),
                           ],
                         ),
                         trailing: IconButton(
-                          icon: Icon(Icons.add, color: Colors.green),
+                          icon: const Icon(Icons.add, color: Colors.green),
                           onPressed: () => _agregarServicio(servicio),
                         ),
                       ),
@@ -430,42 +420,45 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: DropdownButtonFormField<CategoriaRefaccion>(
-            decoration: InputDecoration(labelText: 'Categoría de refacción'),
+            decoration: const InputDecoration(labelText: 'Categoría de refacción'),
             items: _categoriasRefaccion.map((cat) {
               return DropdownMenuItem(value: cat, child: Text(cat.nombre));
             }).toList(),
             onChanged: (categoria) {
-              setState(() => _categoriaRefaccionSeleccionada = categoria);
               _cargarRefaccionesPorCategoria(categoria!.id!);
             },
           ),
         ),
-        
         Expanded(
           child: _refacciones.isEmpty
-              ? Center(child: Text('Selecciona una categoría'))
+              ? const Center(child: Text('Selecciona una categoría'))
               : ListView.builder(
                   itemCount: _refacciones.length,
                   itemBuilder: (context, index) {
                     final refaccion = _refacciones[index];
                     return Card(
-                      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
-                        leading: Icon(Icons.shopping_cart, 
-                            color: refaccion.tieneStock ? Colors.green : Colors.red),
+                        leading: Icon(
+                          Icons.inventory_2_outlined,
+                          color: refaccion.tieneStock ? Colors.green : Colors.red,
+                        ),
                         title: Text(refaccion.nombre),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Text('${Fmt.moneda(refaccion.precio)} · ${refaccion.stockTexto}'),
                             Text('Código: ${refaccion.codigoParte}'),
-                            Text('\$${refaccion.precio} - ${refaccion.stockTexto}'),
                             if (refaccion.marca != null) Text('Marca: ${refaccion.marca}'),
                           ],
                         ),
                         trailing: IconButton(
-                          icon: Icon(Icons.add, color: refaccion.tieneStock ? Colors.green : Colors.grey),
+                          icon: Icon(
+                            Icons.add,
+                            color: refaccion.tieneStock ? Colors.green : Colors.grey,
+                          ),
                           onPressed: refaccion.tieneStock ? () => _agregarRefaccion(refaccion) : null,
                         ),
                       ),
@@ -478,32 +471,39 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
   }
 
   Widget _buildFechaPicker(String label, DateTime fecha, Function(DateTime) onChanged) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
-        SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+        const SizedBox(height: 4),
         InkWell(
           onTap: () async {
             final date = await showDatePicker(
               context: context,
               initialDate: fecha,
               firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(Duration(days: 365)),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
             );
             if (date != null) onChanged(date);
           },
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: Theme.of(context).colorScheme.outline),
+              border: Border.all(color: colorScheme.outline),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${fecha.day}/${fecha.month}/${fecha.year}'),
-                Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(Icons.calendar_today, size: 20, color: colorScheme.primary),
               ],
             ),
           ),
@@ -514,15 +514,19 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
 
   void _seleccionarCliente() async {
     final clientes = await DatabaseHelper().getClientes();
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
+      builder: (context) => SizedBox(
         height: 400,
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Seleccionar cliente', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Seleccionar cliente',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             Expanded(
               child: ListView.builder(
@@ -530,7 +534,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                 itemBuilder: (context, index) {
                   final cliente = clientes[index];
                   return ListTile(
-                    leading: Icon(Icons.person),
+                    leading: const Icon(Icons.person),
                     title: Text(cliente.nombre),
                     subtitle: Text(cliente.getInfoVehiculo()),
                     onTap: () {
@@ -551,53 +555,61 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(16),
+      builder: (context) => SizedBox(
         height: 500,
-        child: Column(
-          children: [
-            Text('Carrito de Servicios', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            SizedBox(height: 16),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _carrito.length,
-                itemBuilder: (context, index) {
-                  final item = _carrito[index];
-                  final esServicio = item['tipo'] == 'servicio';
-                  final nombre = esServicio 
-                      ? (item['item'] as ServicioManoObra).nombre 
-                      : (item['item'] as Refaccion).nombre;
-                  
-                  return ListTile(
-                    leading: Icon(esServicio ? Icons.build : Icons.shopping_cart),
-                    title: Text(nombre),
-                    subtitle: Text('${item['cantidad']}x — ${Fmt.moneda(item['subtotal'] as double)}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () {
-                        setState(() => _carrito.removeAt(index));
-                        Navigator.pop(context);
-                        _mostrarCarrito();
-                      },
-                    ),
-                  );
-                },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const Text(
+                'Carrito de Servicios',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-            ),
-            Divider(),
-            ListTile(
-              title: Text('Total Mano Obra:', style: TextStyle(fontWeight: FontWeight.bold)),
-              trailing: Text('\$${_totalManoObra.toStringAsFixed(2)}'),
-            ),
-            ListTile(
-              title: Text('Total Refacciones:', style: TextStyle(fontWeight: FontWeight.bold)),
-              trailing: Text('\$${_totalRefacciones.toStringAsFixed(2)}'),
-            ),
-            ListTile(
-              title: Text('TOTAL GENERAL:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              trailing: Text('\$${_totalGeneral.toStringAsFixed(2)}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _carrito.length,
+                  itemBuilder: (context, index) {
+                    final item = _carrito[index];
+                    final esServicio = item['tipo'] == 'servicio';
+                    final nombre = esServicio
+                        ? (item['item'] as ServicioManoObra).nombre
+                        : (item['item'] as Refaccion).nombre;
+
+                    return ListTile(
+                      leading: Icon(esServicio ? Icons.build : Icons.inventory_2_outlined),
+                      title: Text(nombre),
+                      subtitle: Text('${item['cantidad']}x — ${Fmt.moneda(item['subtotal'] as double)}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() => _carrito.removeAt(index));
+                          Navigator.pop(context);
+                          _mostrarCarrito();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const Divider(),
+              ListTile(
+                title: const Text('Total Mano Obra:', style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: Text(Fmt.moneda(_totalManoObra)),
+              ),
+              ListTile(
+                title: const Text('Total Refacciones:', style: TextStyle(fontWeight: FontWeight.bold)),
+                trailing: Text(Fmt.moneda(_totalRefacciones)),
+              ),
+              ListTile(
+                title: const Text('TOTAL GENERAL:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                trailing: Text(
+                  Fmt.moneda(_totalGeneral),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
