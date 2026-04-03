@@ -747,58 +747,70 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                                 borderRadius: BorderRadius.circular(14),
                                 child: IntrinsicHeight(
                                   child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       Container(width: 4, color: statusColor),
                                       Expanded(
-                                        child: ListTile(
-                                          contentPadding: const EdgeInsets.symmetric(
-                                            horizontal: 14,
-                                            vertical: 6,
-                                          ),
-                                          leading: Container(
-                                            width: 40,
-                                            height: 40,
-                                            alignment: Alignment.center,
-                                            decoration: BoxDecoration(
-                                              color: statusColor.withValues(alpha: 0.12),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              Icons.receipt_long_rounded,
-                                              color: statusColor,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          title: Text(
-                                            'Orden #${orden.id}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              if (cliente != null)
-                                                Text(
-                                                  cliente.nombre,
-                                                  style: const TextStyle(fontSize: 12),
-                                                ),
-                                              Text(
-                                                Fmt.moneda(orden.totalGeneral),
-                                                style: TextStyle(
-                                                  color: statusColor,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          trailing: _buildStatusChip(orden.estado, statusColor),
+                                        child: GestureDetector(
                                           onTap: () {
                                             Navigator.pop(context);
                                             _editarOrden(orden);
                                           },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 10,
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.center,
+                                              children: [
+                                                Container(
+                                                  width: 40,
+                                                  height: 40,
+                                                  alignment: Alignment.center,
+                                                  decoration: BoxDecoration(
+                                                    color: statusColor.withValues(alpha: 0.12),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.receipt_long_rounded,
+                                                    color: statusColor,
+                                                    size: 20,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        'Orden #${orden.id}',
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.w700,
+                                                          fontSize: 14,
+                                                        ),
+                                                      ),
+                                                      if (cliente != null)
+                                                        Text(
+                                                          cliente.nombre,
+                                                          style: const TextStyle(fontSize: 12),
+                                                        ),
+                                                      Text(
+                                                        Fmt.moneda(orden.totalGeneral),
+                                                        style: TextStyle(
+                                                          color: statusColor,
+                                                          fontWeight: FontWeight.w600,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                _buildStatusChip(orden.estado, statusColor),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ],

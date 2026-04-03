@@ -9,6 +9,7 @@ import '../models/refaccion.dart';
 import '../models/categoria_servicio.dart';
 import '../models/categoria_refaccion.dart';
 import 'detalle_orden_screen.dart';
+import '../utils/formateadores.dart';
 
 class RegistroOrdenScreen extends StatefulWidget {
   @override
@@ -81,12 +82,26 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
 
   void _agregarServicio(ServicioManoObra servicio) {
     setState(() {
-      _carrito.add({
-        'tipo': 'servicio',
-        'item': servicio,
-        'precio': servicio.precioEstimado,
-        'subtotal': servicio.precioEstimado,
-      });
+      final existingIndex = _carrito.indexWhere(
+        (item) => item['tipo'] == 'servicio' && (item['item'] as ServicioManoObra).id == servicio.id,
+      );
+      if (existingIndex >= 0) {
+        final current = _carrito[existingIndex];
+        final newCantidad = (current['cantidad'] as int) + 1;
+        _carrito[existingIndex] = {
+          ...current,
+          'cantidad': newCantidad,
+          'subtotal': servicio.precioEstimado * newCantidad,
+        };
+      } else {
+        _carrito.add({
+          'tipo': 'servicio',
+          'item': servicio,
+          'precio': servicio.precioEstimado,
+          'cantidad': 1,
+          'subtotal': servicio.precioEstimado,
+        });
+      }
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Servicio "${servicio.nombre}" agregado')),
@@ -96,43 +111,44 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
   void _agregarRefaccion(Refaccion refaccion) {
     if (!refaccion.tieneStock) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sin stock disponible'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('Sin stock disponible'), backgroundColor: Colors.red),
       );
       return;
     }
-    
-    int cantidad = 1;
+
+    final existingIndex = _carrito.indexWhere(
+      (item) => item['tipo'] == 'refaccion' && (item['item'] as Refaccion).id == refaccion.id,
+    );
+    final cantidadExistente = existingIndex >= 0 ? (_carrito[existingIndex]['cantidad'] as int) : 0;
+
+    int cantidad = cantidadExistente > 0 ? cantidadExistente : 1;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Agregar ${refaccion.nombre}'),
+        title: Text('${existingIndex >= 0 ? 'Actualizar' : 'Agregar'} ${refaccion.nombre}'),
         content: StatefulBuilder(
           builder: (context, setStateDialog) {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('Precio unitario: \$${refaccion.precio}'),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text('Stock disponible: ${refaccion.stock}'),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     IconButton(
-                      icon: Icon(Icons.remove),
+                      icon: const Icon(Icons.remove),
                       onPressed: () {
-                        if (cantidad > 1) {
-                          setStateDialog(() => cantidad--);
-                        }
+                        if (cantidad > 1) setStateDialog(() => cantidad--);
                       },
                     ),
-                    Text('$cantidad', style: TextStyle(fontSize: 20)),
+                    Text('$cantidad', style: const TextStyle(fontSize: 20)),
                     IconButton(
-                      icon: Icon(Icons.add),
+                      icon: const Icon(Icons.add),
                       onPressed: () {
-                        if (cantidad < refaccion.stock) {
-                          setStateDialog(() => cantidad++);
-                        }
+                        if (cantidad < refaccion.stock) setStateDialog(() => cantidad++);
                       },
                     ),
                   ],
@@ -144,25 +160,34 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar'),
+            child: const Text('Cancelar'),
           ),
           ElevatedButton(
             onPressed: () {
               setState(() {
-                _carrito.add({
-                  'tipo': 'refaccion',
-                  'item': refaccion,
-                  'precio': refaccion.precio,
-                  'cantidad': cantidad,
-                  'subtotal': refaccion.precio * cantidad,
-                });
+                if (existingIndex >= 0) {
+                  final current = _carrito[existingIndex];
+                  _carrito[existingIndex] = {
+                    ...current,
+                    'cantidad': cantidad,
+                    'subtotal': refaccion.precio * cantidad,
+                  };
+                } else {
+                  _carrito.add({
+                    'tipo': 'refaccion',
+                    'item': refaccion,
+                    'precio': refaccion.precio,
+                    'cantidad': cantidad,
+                    'subtotal': refaccion.precio * cantidad,
+                  });
+                }
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${refaccion.nombre} agregado al carrito')),
+                SnackBar(content: Text('${refaccion.nombre} actualizado en el carrito')),
               );
             },
-            child: Text('Agregar'),
+            child: const Text('Confirmar'),
           ),
         ],
       ),
@@ -224,13 +249,6 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
         'notas_tecnicas': null,
       });
       
-      // Actualizar stock si es refacción
-      if (item['tipo'] == 'refaccion') {
-        await DatabaseHelper().actualizarStock(
-          (item['item'] as Refaccion).id!,
-          item['cantidad'] ?? 1,
-        );
-      }
     }
     
     // Programar notificación
@@ -254,8 +272,6 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Nueva Orden de Servicio'),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
         actions: [
           badges.Badge(
             position: badges.BadgePosition.topEnd(top: 0, end: 3),
@@ -276,7 +292,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
               padding: EdgeInsets.all(16),
               child: Card(
                 child: ListTile(
-                  leading: Icon(Icons.person, color: Colors.blue[900]),
+                  leading: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                   title: Text(_clienteSeleccionado?.nombre ?? 'Seleccionar cliente'),
                   subtitle: _clienteSeleccionado != null 
                       ? Text(_clienteSeleccionado!.getInfoVehiculo())
@@ -344,13 +360,11 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
       ),
       bottomNavigationBar: Container(
         padding: EdgeInsets.all(16),
-        color: Colors.blue[900],
+        color: Theme.of(context).colorScheme.surface,
         child: SafeArea(
-          child: ElevatedButton(
+          child: FilledButton(
             onPressed: _guardarOrden,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.blue[900],
+            style: FilledButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -390,7 +404,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                     return Card(
                       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                       child: ListTile(
-                        leading: Icon(Icons.build, color: Colors.blue[900]),
+                        leading: Icon(Icons.build, color: Theme.of(context).colorScheme.primary),
                         title: Text(servicio.nombre),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,7 +481,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+        Text(label, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6))),
         SizedBox(height: 4),
         InkWell(
           onTap: () async {
@@ -482,14 +496,14 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
           child: Container(
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('${fecha.day}/${fecha.month}/${fecha.year}'),
-                Icon(Icons.calendar_today, size: 20, color: Colors.blue[900]),
+                Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.primary),
               ],
             ),
           ),
@@ -557,7 +571,7 @@ class _RegistroOrdenScreenState extends State<RegistroOrdenScreen>
                   return ListTile(
                     leading: Icon(esServicio ? Icons.build : Icons.shopping_cart),
                     title: Text(nombre),
-                    subtitle: Text('\$${item['subtotal']}'),
+                    subtitle: Text('${item['cantidad']}x — ${Fmt.moneda(item['subtotal'] as double)}'),
                     trailing: IconButton(
                       icon: Icon(Icons.delete, color: Colors.red),
                       onPressed: () {

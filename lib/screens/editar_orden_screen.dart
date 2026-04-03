@@ -34,6 +34,19 @@ class _EditarOrdenScreenState extends State<EditarOrdenScreen> {
       totalGeneral: widget.orden.totalGeneral,
       observaciones: _observacionesController.text,
     );
+
+    // Decrement stock only when transitioning to 'completado'
+    if (widget.orden.estado != 'completado' && _estadoSeleccionado == 'completado') {
+      final detalles = await DatabaseHelper().getDetallesByOrden(widget.orden.id!);
+      for (final d in detalles) {
+        final refId = d['refaccion_id'];
+        final cantidad = d['cantidad_refacciones'];
+        if (refId != null && (cantidad as int) > 0) {
+          await DatabaseHelper().actualizarStock(refId as int, cantidad);
+        }
+      }
+    }
+
     await DatabaseHelper().updateOrden(ordenActualizada);
     if (mounted) Navigator.pop(context);
   }
@@ -43,8 +56,6 @@ class _EditarOrdenScreenState extends State<EditarOrdenScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Editar Orden #${widget.orden.id}'),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -77,11 +88,9 @@ class _EditarOrdenScreenState extends State<EditarOrdenScreen> {
             const Spacer(),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: _guardar,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[900],
-                  foregroundColor: Colors.white,
+                style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: const Text('Guardar cambios'),

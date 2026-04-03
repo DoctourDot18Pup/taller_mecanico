@@ -3,6 +3,7 @@ import '../models/orden_servicio.dart';
 import '../models/servicio_mano_obra.dart';
 import '../models/refaccion.dart';
 import '../database/database_helper.dart';
+import '../utils/formateadores.dart';
 
 class DetalleOrdenScreen extends StatelessWidget {
   final OrdenServicio orden;
@@ -20,14 +21,13 @@ class DetalleOrdenScreen extends StatelessWidget {
       servicios.fold(0, (sum, s) => sum + s.precioEstimado);
 
   double get _totalRefacciones => refacciones.fold(
-      0, (sum, r) => sum + (r['refaccion'] as Refaccion).precio * r['cantidad']);
+      0, (sum, r) => sum + (r['refaccion'] as Refaccion).precio * (r['cantidad'] as int));
 
   double get _totalGeneral => _totalServicios + _totalRefacciones;
 
   Future<void> _guardarOrden(BuildContext context) async {
     final db = DatabaseHelper();
 
-    // Guardar orden con totales
     final ordenFinal = OrdenServicio(
       clienteId: orden.clienteId,
       fechaEntrada: orden.fechaEntrada,
@@ -42,7 +42,6 @@ class DetalleOrdenScreen extends StatelessWidget {
 
     final ordenId = await db.insertOrden(ordenFinal);
 
-    // Guardar detalles de servicios
     for (final servicio in servicios) {
       await db.insertDetalle({
         'orden_id': ordenId,
@@ -55,7 +54,6 @@ class DetalleOrdenScreen extends StatelessWidget {
       });
     }
 
-    // Guardar detalles de refacciones y actualizar stock
     for (final item in refacciones) {
       final ref = item['refaccion'] as Refaccion;
       final cantidad = item['cantidad'] as int;
@@ -68,7 +66,7 @@ class DetalleOrdenScreen extends StatelessWidget {
         'subtotal': ref.precio * cantidad,
         'notas_tecnicas': null,
       });
-      await db.actualizarStock(ref.id!, cantidad);
+      // Stock is decremented when the order is marked 'completado', not at creation
     }
 
     if (context.mounted) {
@@ -78,27 +76,29 @@ class DetalleOrdenScreen extends StatelessWidget {
           backgroundColor: Colors.green,
         ),
       );
-      // Regresar hasta OrdenesScreen
       Navigator.of(context).popUntil((route) => route.isFirst);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Resumen de Orden'),
-        backgroundColor: Colors.blue[900],
-        foregroundColor: Colors.white,
       ),
       body: CustomScrollView(
         slivers: [
           // Servicios
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Servicios',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Servicios',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ),
           SliverList(
@@ -106,9 +106,15 @@ class DetalleOrdenScreen extends StatelessWidget {
               (context, index) {
                 final servicio = servicios[index];
                 return ListTile(
-                  leading: const Icon(Icons.build, color: Colors.blue),
+                  leading: Icon(Icons.build_outlined, color: colorScheme.primary),
                   title: Text(servicio.nombre),
-                  trailing: Text('\$${servicio.precioEstimado.toStringAsFixed(2)}'),
+                  trailing: Text(
+                    Fmt.moneda(servicio.precioEstimado),
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 );
               },
               childCount: servicios.length,
@@ -118,9 +124,11 @@ class DetalleOrdenScreen extends StatelessWidget {
           // Refacciones
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Refacciones',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text(
+                'Refacciones',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ),
           ),
           SliverList(
@@ -130,10 +138,16 @@ class DetalleOrdenScreen extends StatelessWidget {
                 final ref = item['refaccion'] as Refaccion;
                 final cantidad = item['cantidad'] as int;
                 return ListTile(
-                  leading: const Icon(Icons.settings, color: Colors.orange),
+                  leading: Icon(Icons.inventory_2_outlined, color: colorScheme.secondary),
                   title: Text(ref.nombre),
                   subtitle: Text('Cantidad: $cantidad'),
-                  trailing: Text('\$${(ref.precio * cantidad).toStringAsFixed(2)}'),
+                  trailing: Text(
+                    Fmt.moneda(ref.precio * cantidad),
+                    style: TextStyle(
+                      color: colorScheme.secondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 );
               },
               childCount: refacciones.length,
@@ -146,31 +160,37 @@ class DetalleOrdenScreen extends StatelessWidget {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue[200]!),
+                color: isDark ? const Color(0xFF1E2535) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: isDark ? const Color(0xFF2A3245) : const Color(0xFFE8ECF0),
+                ),
               ),
               child: Column(
                 children: [
-                  _filaTotales('Mano de obra', _totalServicios),
-                  _filaTotales('Refacciones', _totalRefacciones),
-                  const Divider(),
-                  _filaTotales('Total general', _totalGeneral, bold: true),
+                  _filaTotales(context, 'Mano de obra', _totalServicios),
+                  const SizedBox(height: 8),
+                  _filaTotales(context, 'Refacciones', _totalRefacciones),
+                  Divider(
+                    height: 20,
+                    color: colorScheme.outline.withValues(alpha: 0.4),
+                  ),
+                  _filaTotales(context, 'Total general', _totalGeneral, bold: true),
                 ],
               ),
             ),
           ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 80)),
         ],
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ElevatedButton.icon(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: FilledButton.icon(
           onPressed: () => _guardarOrden(context),
-          icon: const Icon(Icons.check_circle),
+          icon: const Icon(Icons.check_circle_outline_rounded),
           label: const Text('Confirmar y guardar orden'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue[900],
-            foregroundColor: Colors.white,
+          style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
           ),
         ),
@@ -178,16 +198,16 @@ class DetalleOrdenScreen extends StatelessWidget {
     );
   }
 
-  Widget _filaTotales(String label, double valor, {bool bold = false}) {
-    final style = TextStyle(
-      fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+  Widget _filaTotales(BuildContext context, String label, double valor, {bool bold = false}) {
+    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      fontWeight: bold ? FontWeight.w700 : FontWeight.normal,
       fontSize: bold ? 16 : 14,
     );
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: style),
-        Text('\$${valor.toStringAsFixed(2)}', style: style),
+        Text(Fmt.moneda(valor), style: style),
       ],
     );
   }
