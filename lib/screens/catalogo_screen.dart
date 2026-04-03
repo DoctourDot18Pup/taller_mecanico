@@ -10,10 +10,10 @@ import 'form_refaccion_screen.dart';
 class CatalogoScreen extends StatefulWidget {
   const CatalogoScreen({super.key});
   @override
-  State<CatalogoScreen> createState() => _CatalogoScreenState();
+  State<CatalogoScreen> createState() => CatalogoScreenState();
 }
 
-class _CatalogoScreenState extends State<CatalogoScreen>
+class CatalogoScreenState extends State<CatalogoScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
   List<ServicioManoObra> _servicios = [];
@@ -34,6 +34,8 @@ class _CatalogoScreenState extends State<CatalogoScreen>
     _tab.dispose();
     super.dispose();
   }
+
+  void reload() => _cargar();
 
   Future<void> _cargar() async {
     final s = await DatabaseHelper().getServicios();

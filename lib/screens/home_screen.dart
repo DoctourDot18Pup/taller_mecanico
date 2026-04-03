@@ -13,12 +13,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  final _screens = [
+  final _catalogoKey = GlobalKey<CatalogoScreenState>();
+  final _statsKey = GlobalKey<EstadisticasScreenState>();
+
+  late final List<Widget> _screens = [
     const OrdenesScreen(),
     const ClientesScreen(),
-    const CatalogoScreen(),
-    const EstadisticasScreen(),
+    CatalogoScreen(key: _catalogoKey),
+    EstadisticasScreen(key: _statsKey),
   ];
+
+  void _onTabSelected(int i) {
+    setState(() => _index = i);
+    if (i == 2) _catalogoKey.currentState?.reload();
+    if (i == 3) _statsKey.currentState?.reload();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(index: _index, children: _screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: _onTabSelected,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.build_circle_outlined),

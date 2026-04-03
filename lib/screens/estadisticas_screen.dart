@@ -6,10 +6,10 @@ import '../main.dart';
 class EstadisticasScreen extends StatefulWidget {
   const EstadisticasScreen({super.key});
   @override
-  State<EstadisticasScreen> createState() => _EstadisticasScreenState();
+  State<EstadisticasScreen> createState() => EstadisticasScreenState();
 }
 
-class _EstadisticasScreenState extends State<EstadisticasScreen> {
+class EstadisticasScreenState extends State<EstadisticasScreen> {
   DateTime _mes = DateTime.now();
   Map<String, dynamic>? _stats;
   bool _cargando = true;
@@ -19,6 +19,8 @@ class _EstadisticasScreenState extends State<EstadisticasScreen> {
     super.initState();
     _cargar();
   }
+
+  void reload() => _cargar();
 
   Future<void> _cargar() async {
     setState(() => _cargando = true);
