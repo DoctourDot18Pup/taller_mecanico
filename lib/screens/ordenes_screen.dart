@@ -139,76 +139,115 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
       body: Column(
         children: [
           // Calendario
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                ),
-              ],
-            ),
-            child: TableCalendar(
-              firstDay: DateTime.utc(2024, 1, 1),
-              lastDay: DateTime.utc(2026, 12, 31),
-              focusedDay: _focusedDay,
-              calendarFormat: _calendarFormat,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-                _mostrarModalEventos(selectedDay);
-              },
-              onFormatChanged: (format) {
-                setState(() => _calendarFormat = format);
-              },
-              onPageChanged: (focusedDay) {
-                _focusedDay = focusedDay;
-              },
-              calendarStyle: CalendarStyle(
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue[100],
-                  shape: BoxShape.circle,
-                ),
-                selectedDecoration: BoxDecoration(
-                  color: Colors.blue[900],
-                  shape: BoxShape.circle,
-                ),
-              ),
-              calendarBuilders: CalendarBuilders(
-                markerBuilder: (context, day, events) {
-                  final ordenesDelDia = _eventos[day] ?? [];
-                  if (ordenesDelDia.isEmpty) return const SizedBox.shrink();
+          Builder(builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final surfaceColor = Theme.of(context).colorScheme.surface;
+            final onSurface = Theme.of(context).colorScheme.onSurface;
+            final primary = Theme.of(context).colorScheme.primary;
 
-                  // Un punto por orden, cada uno con el color de su estado
-                  final puntos = ordenesDelDia.take(4).map((o) {
-                    return Container(
-                      width: 6,
-                      height: 6,
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: _getPuntoColor([o]),
+            return Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: surfaceColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                    spreadRadius: 1,
+                    blurRadius: 6,
+                  ),
+                ],
+              ),
+              child: TableCalendar(
+                firstDay: DateTime.utc(2024, 1, 1),
+                lastDay: DateTime.utc(2027, 12, 31),
+                focusedDay: _focusedDay,
+                calendarFormat: _calendarFormat,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  _mostrarModalEventos(selectedDay);
+                },
+                onFormatChanged: (format) {
+                  setState(() => _calendarFormat = format);
+                },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                },
+                headerStyle: HeaderStyle(
+                  titleTextStyle: TextStyle(
+                    color: onSurface,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  leftChevronIcon: Icon(Icons.chevron_left, color: onSurface),
+                  rightChevronIcon: Icon(Icons.chevron_right, color: onSurface),
+                  formatButtonTextStyle: TextStyle(color: onSurface),
+                  formatButtonDecoration: BoxDecoration(
+                    border: Border.all(color: onSurface.withValues(alpha: 0.4)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(color: onSurface.withValues(alpha: 0.7)),
+                  weekendStyle: TextStyle(color: primary.withValues(alpha: 0.8)),
+                ),
+                calendarStyle: CalendarStyle(
+                  defaultTextStyle: TextStyle(color: onSurface),
+                  weekendTextStyle: TextStyle(color: primary),
+                  outsideTextStyle: TextStyle(color: onSurface.withValues(alpha: 0.3)),
+                  disabledTextStyle: TextStyle(color: onSurface.withValues(alpha: 0.2)),
+                  todayDecoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  todayTextStyle: TextStyle(color: onSurface, fontWeight: FontWeight.bold),
+                  selectedDecoration: BoxDecoration(
+                    color: primary,
+                    shape: BoxShape.circle,
+                  ),
+                  selectedTextStyle: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, day, events) {
+                    // Normalizar clave para coincidir con el Map (hora local, sin componente de hora)
+                    final clave = DateTime(day.year, day.month, day.day);
+                    final ordenesDelDia = _eventos[clave] ?? [];
+                    if (ordenesDelDia.isEmpty) return const SizedBox.shrink();
+
+                    final puntos = ordenesDelDia.take(4).map((o) {
+                      return Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _getPuntoColor([o]),
+                          border: Border.all(
+                            color: surfaceColor,
+                            width: 0.5,
+                          ),
+                        ),
+                      );
+                    }).toList();
+
+                    return Positioned(
+                      bottom: 2,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: puntos,
                       ),
                     );
-                  }).toList();
-
-                  return Positioned(
-                    bottom: 2,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: puntos,
-                    ),
-                  );
-                },
+                  },
+                ),
               ),
-            ),
-          ),
+            );
+          }),
 
           // Listado con SliverPersistentHeader y Dismissible
           Expanded(
